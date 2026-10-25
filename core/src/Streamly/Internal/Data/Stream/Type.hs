@@ -772,7 +772,12 @@ drain (Stream step state) = go SPEC state
 {-# INLINE_NORMAL head #-}
 head :: Monad m => Stream m a -> m (Maybe a)
 #ifdef USE_FOLDS_EVERYWHERE
-head = fold Fold.one
+-- Fold.one is defined in Fold.Combinators, which imports this module, so the
+-- same fold is spelled out here. 'fold' alone is ambiguous with
+-- Data.Foldable's.
+head =
+    Streamly.Internal.Data.Stream.Type.fold
+        (FL.foldt' (\_ a -> FL.Done (Just a)) (FL.Partial ()) (const Nothing))
 #else
 head = foldrM (\x _ -> return (Just x)) (return Nothing)
 #endif
